@@ -6,119 +6,149 @@
     <title>ChemHermes 3D Molecule Viewer</title>
     <script src="https://3dmol.org/build/3Dmol-min.js"></script>
     <style>
-        #mol3d {
-            width: 500px;
-            height: 500px;
-            border: 2px solid white;
-            margin: 20px auto;
-            position: relative;
-        }
         h1, p {
             text-align: center;
             font-family: Arial, sans-serif;
         }
-        #fileForm {
-            text-align: center;
-            margin: 20px;
+        #popupButton {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
     <h1>ChemHermes 3D Molecule Viewer</h1>
-    <p>Upload a PDB or SDF file to view the molecule</p>
+    <p>Click the button below to open the file upload window in a popup</p>
 
-    <div id="fileForm">
-        <input type="file" id="moleculeFile" accept=".pdb,.sdf">
-        <button id="uploadBtn">Upload and Render</button>
-    </div>
+    <!-- Button to open the popup -->
+    <button id="popupButton" onclick="openPopup()">Open Molecule Viewer</button>
 
-    <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
-    
     <script>
-        const uploadButton = document.getElementById('uploadBtn');
-        const moleculeFileInput = document.getElementById('moleculeFile');
-        const viewerElement = document.getElementById('mol3d');
+        // Function to open a popup window for the 3D molecule viewer
+        function openPopup() {
+            const popupWindow = window.open('', 'ChemHermesPopup', 'width=800,height=600,resizable=yes,scrollbars=yes');
+            const popupContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>ChemHermes 3D Molecule Viewer</title>
+                    <script src="https://3dmol.org/build/3Dmol-min.js"></script>
+                    <style>
+                        #mol3d {
+                            width: 500px;
+                            height: 500px;
+                            border: 2px solid white;
+                            margin: 20px auto;
+                        }
+                        h1, p {
+                            text-align: center;
+                            font-family: Arial, sans-serif;
+                        }
+                        #fileForm {
+                            text-align: center;
+                            margin: 20px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>ChemHermes 3D Molecule Viewer</h1>
+                    <p>Upload a PDB or SDF file to view the molecule</p>
 
-        let viewer = $3Dmol.createViewer(viewerElement, {
-            backgroundColor: 'white',
-            width: '100%',
-            height: '100%',
-        });
+                    <div id="fileForm">
+                        <input type="file" id="moleculeFile" accept=".pdb,.sdf">
+                        <button id="uploadBtn">Upload and Render</button>
+                    </div>
 
-        // Function to determine if the molecule is small
-        function isSmallMolecule(pdbData) {
-            // Count the number of ATOM records
-            const atomCount = (pdbData.match(/^ATOM\s/gm) || []).length;
+                    <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
+                    
+                    <script>
+                        const uploadButton = document.getElementById('uploadBtn');
+                        const moleculeFileInput = document.getElementById('moleculeFile');
+                        const viewerElement = document.getElementById('mol3d');
 
-            // Check for HELIX or SHEET records (indicates large molecule)
-            const hasHelix = pdbData.includes('HELIX');
-            const hasSheet = pdbData.includes('SHEET');
+                        let viewer = $3Dmol.createViewer(viewerElement, {
+                            backgroundColor: 'white',
+                            width: '100%',
+                            height: '100%',
+                        });
 
-            // Consider the molecule small if it has few atoms and no secondary structure
-            return atomCount < 50 && !hasHelix && !hasSheet;
-        }
-
-        // Handle file upload and rendering
-        uploadButton.addEventListener('click', () => {
-            const file = moleculeFileInput.files[0];
-            if (!file) {
-                alert('Please select a molecule file.');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const fileContent = event.target.result;
-
-                // Send the file content to the Netlify function
-                fetch('/.netlify/functions/uploadMolecule', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
-                    body: fileContent,
-                })
-                .then(response => response.text())
-                .then(moleculeData => {
-                    console.log('File data received:', moleculeData);
-
-                    if (!moleculeData || moleculeData.length === 0) {
-                        console.error('Empty molecule data received');
-                        return;
-                    }
-
-                    const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
-
-                    try {
-                        // Clear all previous models from the viewer
-                        viewer.removeAllModels();
-
-                        // Add the new model to the viewer
-                        viewer.addModel(moleculeData, format);
-
-                        // Determine whether to use stick or cartoon style based on the molecule size
-                        if (isSmallMolecule(moleculeData)) {
-                            // Use stick style for small molecules
-                            viewer.setStyle({}, {stick: {colorscheme: 'Jmol', radius: 0.2}});
-                        } else {
-                            // Use cartoon style for large molecules (proteins)
-                            viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                        // Function to determine if the molecule is small
+                        function isSmallMolecule(pdbData) {
+                            const atomCount = (pdbData.match(/^ATOM\\s/gm) || []).length;
+                            const hasHelix = pdbData.includes('HELIX');
+                            const hasSheet = pdbData.includes('SHEET');
+                            return atomCount < 50 && !hasHelix && !hasSheet;
                         }
 
-                        // Render the updated molecule view
-                        viewer.zoomTo();
-                        viewer.render();
-                        console.log('Molecule rendered successfully');
-                    } catch (err) {
-                        console.error('Error rendering molecule:', err);
-                    }
-                })
-                .catch(error => console.error('Error uploading file:', error));
-            };
+                        // Handle file upload and rendering
+                        uploadButton.addEventListener('click', () => {
+                            const file = moleculeFileInput.files[0];
+                            if (!file) {
+                                alert('Please select a molecule file.');
+                                return;
+                            }
 
-            // Read the file as plain text
-            reader.readAsText(file);
-        });
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                const fileContent = event.target.result;
+
+                                // Send the file content to the Netlify function
+                                fetch('/.netlify/functions/uploadMolecule', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'text/plain',
+                                    },
+                                    body: fileContent,
+                                })
+                                .then(response => response.text())
+                                .then(moleculeData => {
+                                    console.log('File data received:', moleculeData);
+
+                                    if (!moleculeData || moleculeData.length === 0) {
+                                        console.error('Empty molecule data received');
+                                        return;
+                                    }
+
+                                    const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
+
+                                    try {
+                                        // Clear all previous models from the viewer
+                                        viewer.removeAllModels();
+
+                                        // Add the new model to the viewer
+                                        viewer.addModel(moleculeData, format);
+
+                                        // Determine whether to use stick or cartoon style based on the molecule size
+                                        if (isSmallMolecule(moleculeData)) {
+                                            viewer.setStyle({}, {stick: {colorscheme: 'Jmol', radius: 0.2}});
+                                        } else {
+                                            viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                                        }
+
+                                        viewer.zoomTo();
+                                        viewer.render();
+                                        console.log('Molecule rendered successfully');
+                                    } catch (err) {
+                                        console.error('Error rendering molecule:', err);
+                                    }
+                                })
+                                .catch(error => console.error('Error uploading file:', error));
+                            };
+
+                            reader.readAsText(file);
+                        });
+                    </script>
+                </body>
+                </html>
+            `;
+            popupWindow.document.write(popupContent);
+            popupWindow.document.close(); // Necessary to finish writing to the document
+        }
     </script>
 </body>
 </html>
