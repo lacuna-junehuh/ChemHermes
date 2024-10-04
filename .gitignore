@@ -128,3 +128,22 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# ---- Custom Additions for ChemHermes ----
+
+# macOS-specific files
+.DS_Store  # macOS hidden file that shouldn't be committed
+
+# Windows-specific files
+Thumbs.db  # Windows hidden file that shouldn't be committed
+
+# IDE-specific files (if using Visual Studio Code or JetBrains)
+.vscode/   # Ignore VSCode settings folder
+.idea/     # Ignore JetBrains settings folder
+
+# Build directories (if you generate any build output)
+dist/
+build/
+
+# Netlify configuration (if using Netlify for deployment)
+netlify.toml
