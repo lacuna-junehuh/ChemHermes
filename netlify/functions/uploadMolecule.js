@@ -1,70 +1,136 @@
-exports.handler = async (event) => {
-    try {
-        // Ensure it's a POST request
-        if (event.httpMethod !== 'POST') {
-            return {
-                statusCode: 405,
-                body: 'Method Not Allowed',
-            };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChemHermes 3D Molecule Viewer</title>
+    <script src="https://3dmol.org/build/3Dmol-min.js"></script>
+    <style>
+        #mol3d {
+            width: 500px;
+            height: 500px;
+            border: 2px solid white;
+            margin: 20px auto;
+        }
+        h1, p {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #fileForm {
+            text-align: center;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ChemHermes 3D Molecule Viewer</h1>
+    <p>Upload a PDB or SDF file to view the molecule</p>
+
+    <div id="fileForm">
+        <input type="file" id="moleculeFile" accept=".pdb,.sdf">
+        <select id="styleSelect">
+            <option value="cartoon">Cartoon</option>
+            <option value="stick">Stick</option>
+            <option value="ball&stick">Ball & Stick</option>
+        </select>
+        <button id="uploadBtn">Upload and Render</button>
+    </div>
+
+    <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
+    
+    <script>
+        const uploadButton = document.getElementById('uploadBtn');
+        const moleculeFileInput = document.getElementById('moleculeFile');
+        const styleSelect = document.getElementById('styleSelect');
+        const viewerElement = document.getElementById('mol3d');
+
+        let viewer = $3Dmol.createViewer(viewerElement, {
+            backgroundColor: 'white',
+            width: '100%',
+            height: '100%',
+        });
+
+        // Function to determine if the molecule is small
+        function isSmallMolecule(pdbData) {
+            const atomCount = (pdbData.match(/^ATOM\s/gm) || []).length;
+            const hasHelix = pdbData.includes('HELIX');
+            const hasSheet = pdbData.includes('SHEET');
+            return atomCount < 50 && !hasHelix && !hasSheet;
         }
 
-        const contentType = event.headers['content-type'];
-        console.log('Content Type:', contentType);
-
-        let bodyData;
-
-        // Handle case where GPT sends file data as JSON (with file_content field)
-        if (contentType === 'application/json') {
-            console.log('Received JSON Body:', event.body);
-
-            const parsedBody = JSON.parse(event.body);
-
-            // Check if 'file_content' exists and extract it, otherwise fallback to other handling
-            if (parsedBody.file_content) {
-                bodyData = parsedBody.file_content;
-                console.log('Received file_content data length:', bodyData.length);
-            } else {
-                console.error('No file_content field in the JSON body');
-                return {
-                    statusCode: 400,
-                    body: 'Bad Request: No file_content field in JSON body',
-                };
+        // Handle file upload and rendering
+        uploadButton.addEventListener('click', () => {
+            const file = moleculeFileInput.files[0];
+            if (!file) {
+                alert('Please select a molecule file.');
+                return;
             }
 
-        } else if (event.isBase64Encoded) {
-            // Handle base64-encoded file content
-            console.log('Decoding base64-encoded file data...');
-            bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
+            const selectedStyle = styleSelect.value;
 
-        } else {
-            // Handle plain text file content (expected case)
-            bodyData = event.body;
-            console.log('Received plain text file data length:', bodyData.length);
-        }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const fileContent = event.target.result;
 
-        // Check if we have valid file data
-        if (!bodyData || bodyData.length === 0) {
-            console.error('No valid file data received');
-            return {
-                statusCode: 400,
-                body: 'Bad Request: No valid file data received. Ensure the PDB content is correctly uploaded.',
+                // Send the file content and style to the Netlify function
+                fetch('/.netlify/functions/uploadMolecule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        file_content: fileContent,
+                        style: selectedStyle,
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('File data received:', data);
+
+                    const moleculeData = data.fileContent;
+                    const style = data.style;
+
+                    if (!moleculeData || moleculeData.length === 0) {
+                        console.error('Empty molecule data received');
+                        return;
+                    }
+
+                    const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
+
+                    try {
+                        // Clear all previous models from the viewer
+                        viewer.removeAllModels();
+
+                        // Add the new model to the viewer
+                        viewer.addModel(moleculeData, format);
+
+                        // Automatically add missing hydrogens
+                        viewer.addHydrogens();
+
+                        // Apply the selected style
+                        if (style === 'stick') {
+                            viewer.setStyle({}, {stick: {colorscheme: 'Jmol', radius: 0.2}});
+                        } else if (style === 'ball&stick') {
+                            viewer.setStyle({}, {stick: {radius: 0.2}, sphere: {scale: 0.3}});
+                        } else {
+                            viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                        }
+
+                        // Render the updated molecule view
+                        viewer.zoomTo();
+                        viewer.render();
+                        console.log('Molecule rendered successfully');
+                    } catch (err) {
+                        console.error('Error rendering molecule:', err);
+                    }
+                })
+                .catch(error => console.error('Error uploading file:', error));
             };
-        }
 
-        // Return the decoded file data to the client
-        return {
-            statusCode: 200,
-            body: bodyData,
-            headers: {
-                'Content-Type': 'text/plain',
-            },
-        };
-    } catch (error) {
-        console.error('Error processing file:', error);
-        return {
-            statusCode: 500,
-            body: 'Internal Server Error',
-        };
-    }
-};
+            // Read the file as plain text
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
 
