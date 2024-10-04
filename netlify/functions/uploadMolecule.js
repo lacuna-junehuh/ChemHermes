@@ -12,9 +12,8 @@ exports.handler = async (event) => {
         console.log('Content Type:', contentType);
 
         let bodyData;
-        let selectedStyle = 'cartoon'; // Default style if none provided
 
-        // Handle case where GPT sends file data as JSON (with file_content and style fields)
+        // Handle case where GPT sends file data as JSON (with file_content field)
         if (contentType === 'application/json') {
             console.log('Received JSON Body:', event.body);
 
@@ -30,12 +29,6 @@ exports.handler = async (event) => {
                     statusCode: 400,
                     body: 'Bad Request: No file_content field in JSON body',
                 };
-            }
-
-            // Extract style if provided
-            if (parsedBody.style) {
-                selectedStyle = parsedBody.style;
-                console.log('Selected Style:', selectedStyle);
             }
 
         } else if (event.isBase64Encoded) {
@@ -58,15 +51,12 @@ exports.handler = async (event) => {
             };
         }
 
-        // Return the decoded file data along with the style to the client
+        // Return the decoded file data to the client
         return {
             statusCode: 200,
-            body: JSON.stringify({
-                fileContent: bodyData,
-                style: selectedStyle,
-            }),
+            body: bodyData,
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'text/plain',
             },
         };
     } catch (error) {
