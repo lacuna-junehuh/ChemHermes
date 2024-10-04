@@ -1,6 +1,6 @@
 exports.handler = async (event) => {
     try {
-        // Check if the method is POST
+        // Ensure it's a POST request
         if (event.httpMethod !== 'POST') {
             return {
                 statusCode: 405,
@@ -13,34 +13,46 @@ exports.handler = async (event) => {
 
         let bodyData;
 
-        // Handle JSON input if sent from GPT Action
+        // Handle case where GPT sends file data as JSON
         if (contentType === 'application/json') {
+            // Log the full JSON body to debug the structure
+            console.log('Received JSON Body:', event.body);
+
             const parsedBody = JSON.parse(event.body);
-            bodyData = parsedBody.file;  // Assume the file content is inside the 'file' field in JSON
+
+            // Check if the 'file' field exists before accessing it
+            if (!parsedBody.file) {
+                console.error('No file field in the JSON body');
+                return {
+                    statusCode: 400,
+                    body: 'Bad Request: No file field in JSON body',
+                };
+            }
+
+            bodyData = parsedBody.file;
             console.log('Received JSON File Data Length:', bodyData.length);
         } else if (event.isBase64Encoded) {
-            // Decode base64-encoded content if sent as plain text
+            // Handle base64-encoded file content
             console.log('Decoding base64-encoded file data...');
             bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
         } else {
-            bodyData = event.body;  // Handle raw plain text content
+            // Handle plain text file content
+            bodyData = event.body;
+            console.log('Received Plain Text File Data Length:', bodyData.length);
         }
 
         if (!bodyData || bodyData.length === 0) {
-            console.error('Failed to receive or decode file data');
+            console.error('No valid file data received');
             return {
                 statusCode: 400,
-                body: 'Bad Request: No file data received',
+                body: 'Bad Request: No valid file data received',
             };
         }
-
-        // Log file data for debugging
-        console.log('Received File Data Length:', bodyData.length);
 
         // Return the decoded file data to the client
         return {
             statusCode: 200,
-            body: bodyData,  // Send back the molecule data
+            body: bodyData,
             headers: {
                 'Content-Type': 'text/plain',
             },
