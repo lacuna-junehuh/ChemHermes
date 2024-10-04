@@ -32,14 +32,18 @@
         let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
         console.log('Viewer created:', viewer);
 
-        // Manually fetch the PDB file using $.get
-        $.get("https://3dmol.org/pdb/1A2C.pdb", function(pdbData) {
-            console.log('PDB model fetched');
+        // Load the locally hosted PDB file
+        const pdbUrl = "./models/1a6m.pdb";
+        
+        $.get(pdbUrl, function(pdbData) {
+            console.log('Local PDB model fetched');
             viewer.addModel(pdbData, "pdb");  // Add the model
             viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
             viewer.zoomTo();  // Automatically zoom to fit the molecule
             viewer.render();  // Render the model
             console.log('Rendering complete');
+        }).fail(function() {
+            console.error('Failed to load the local PDB file.');
         });
     </script>
 </body>
