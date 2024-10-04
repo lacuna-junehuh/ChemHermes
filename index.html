@@ -26,13 +26,14 @@
 <body>
     <h1>ChemHermes 3D Molecule Viewer</h1>
     <p>Upload a PDB or SDF file to view the molecule</p>
-    
+
+    <!-- File upload form -->
     <div id="fileForm">
         <input type="file" id="moleculeFile" accept=".pdb,.sdf">
         <button id="uploadBtn">Upload and Render</button>
     </div>
 
-    <div id="mol3d"></div>
+    <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
     
     <script>
         const uploadButton = document.getElementById('uploadBtn');
@@ -53,29 +54,38 @@
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', file);
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const fileContent = event.target.result;
 
-            // Send file to Netlify function
-            fetch('/.netlify/functions/uploadMolecule', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.text())
-            .then(moleculeData => {
-                console.log('File data received:', moleculeData);
-                
-                // Check if file is a PDB or SDF, then render appropriately
-                const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
-                viewer.addModel(moleculeData, format);
-                viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
-                viewer.zoomTo();
-                viewer.render();
-            })
-            .catch(error => console.error('Error uploading file:', error));
+                // Send file to Netlify function
+                fetch('/.netlify/functions/uploadMolecule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',  // Indicate plain text for the content type
+                    },
+                    body: fileContent,
+                })
+                .then(response => response.text())
+                .then(moleculeData => {
+                    // Render the molecule in the viewer
+                    console.log('File data received:', moleculeData);
+
+                    const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
+                    viewer.addModel(moleculeData, format);
+                    viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                    viewer.zoomTo();
+                    viewer.render();
+                })
+                .catch(error => console.error('Error uploading file:', error));
+            };
+
+            // Read the file as plain text (PDB or SDF)
+            reader.readAsText(file);
         });
     </script>
 </body>
 </html>
+
 
 
