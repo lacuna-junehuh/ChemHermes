@@ -11,9 +11,7 @@
         #mol3d {
             width: 500px;
             height: 500px;
-            border: 2px solid black;
             margin: 20px auto; /* Center the container */
-            box-sizing: border-box; /* Ensure borders are included in the size */
             position: relative;
         }
         h1 {
@@ -42,7 +40,7 @@
         viewer.resize();
 
         // Fetch the locally hosted PDB file using the native JavaScript fetch API
-        const pdbUrl = "./models/1A2C.pdb";
+        const pdbUrl = "./models/1a6m.pdb";
 
         fetch(pdbUrl)
             .then(response => {
@@ -65,6 +63,3 @@
     </script>
 </body>
 </html>
-
-
-
