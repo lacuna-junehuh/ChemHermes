@@ -40,19 +40,28 @@
         // Force the viewer to resize to match the container size
         viewer.resize();
 
-        // Load the locally hosted PDB file
+        // Fetch the locally hosted PDB file using the native JavaScript fetch API
         const pdbUrl = "./models/1a6m.pdb";
-        
-        $.get(pdbUrl, function(pdbData) {
-            console.log('Local PDB model fetched');
-            viewer.addModel(pdbData, "pdb");  // Add the model
-            viewer.setStyle({}, {cartoon: {color: 'spectrum'}});  // Apply style
-            viewer.zoomTo();  // Automatically zoom to fit the molecule
-            viewer.render();  // Render the model
-            console.log('Rendering complete');
-        }).fail(function() {
-            console.error('Failed to load the local PDB file.');
-        });
+
+        fetch(pdbUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();  // Get the file content as text
+            })
+            .then(pdbData => {
+                console.log('Local PDB model fetched');
+                viewer.addModel(pdbData, "pdb");  // Add the model
+                viewer.setStyle({}, {cartoon: {color: 'spectrum'}});  // Apply style
+                viewer.zoomTo();  // Automatically zoom to fit the molecule
+                viewer.render();  // Render the model
+                console.log('Rendering complete');
+            })
+            .catch(error => {
+                console.error('Failed to load the local PDB file:', error);
+            });
     </script>
 </body>
 </html>
+
