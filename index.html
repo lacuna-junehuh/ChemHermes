@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChemHermes 3D Molecule Viewer</title>
-    <!-- Include 3Dmol.js library from the hosted CDN -->
     <script src="https://3dmol.org/build/3Dmol-min.js"></script>
     <style>
-        /* Basic styling for the viewer container */
         #mol3d {
             width: 500px;
             height: 500px;
@@ -29,7 +27,6 @@
     <h1>ChemHermes 3D Molecule Viewer</h1>
     <p>Upload a PDB or SDF file to view the molecule</p>
 
-    <!-- File upload form -->
     <div id="fileForm">
         <input type="file" id="moleculeFile" accept=".pdb,.sdf">
         <button id="uploadBtn">Upload and Render</button>
@@ -48,7 +45,6 @@
             height: '100%',
         });
 
-        // Handle file upload and rendering
         uploadButton.addEventListener('click', () => {
             const file = moleculeFileInput.files[0];
             if (!file) {
@@ -58,15 +54,14 @@
 
             const reader = new FileReader();
             reader.onload = function(event) {
-                const fileContent = event.target.result; // File content as plain text
+                const fileContent = event.target.result;
 
-                // Send file to Netlify function as plain text
                 fetch('/.netlify/functions/uploadMolecule', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'text/plain',  // Ensure plain text content-type
+                        'Content-Type': 'text/plain',
                     },
-                    body: fileContent,  // Send file content in request body
+                    body: fileContent,
                 })
                 .then(response => response.text())
                 .then(moleculeData => {
@@ -77,27 +72,31 @@
                         return;
                     }
 
-                    // Determine file format (PDB or SDF) based on file extension
                     const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
+
                     try {
-                        // Render the molecule in the viewer
                         viewer.addModel(moleculeData, format);
-                        viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+
+                        // Use stick representation for small molecules
+                        viewer.setStyle({}, {stick: {colorscheme: 'Jmol'}});
+
+                        // Alternatively, you can use sphere or line style
+                        // viewer.setStyle({}, {sphere: {scale: 0.3}}); // Sphere style for atoms
+                        // viewer.setStyle({}, {line: {colorscheme: 'Jmol'}}); // Line style
+
                         viewer.zoomTo();
                         viewer.render();
                         console.log('Molecule rendered successfully');
                     } catch (err) {
-                        console.error('Error rendering molecule:', err);  // Log rendering errors
+                        console.error('Error rendering molecule:', err);
                     }
                 })
-                .catch(error => {
-                    console.error('Error uploading file:', error);  // Log upload errors
-                });
+                .catch(error => console.error('Error uploading file:', error));
             };
 
-            // Read the file as plain text (PDB or SDF)
-            reader.readAsText(file);  // Ensure the file is read as text
+            reader.readAsText(file);
         });
     </script>
 </body>
 </html>
+
