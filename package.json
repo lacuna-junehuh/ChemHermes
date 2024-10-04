@@ -2,11 +2,6 @@
   "name": "chemhermes",
   "version": "1.0.0",
   "description": "ChemHermes Netlify Function for molecule file uploads",
-  "main": "index.js",
-  "scripts": {
-    "start": "netlify-lambda serve",
-    "build": "netlify-lambda build"
-  },
   "dependencies": {
     "multiparty": "^4.2.1"
   }
