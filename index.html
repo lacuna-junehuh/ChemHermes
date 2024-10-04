@@ -25,30 +25,13 @@
     <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
     
     <script>
-        // Function to render a molecule using 3Dmol.js
-        function renderMolecule(molData, format = 'sdf') {
-            let element = document.getElementById('mol3d');
-            let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
-            viewer.addModel(molData, format);  // Add molecule data
-            viewer.setStyle({}, {stick: {}});  // Set stick model for rendering
-            viewer.zoomTo();  // Automatically zoom to fit the molecule
-            viewer.render();  // Render the molecule
-        }
-
-        // Example molecule data in SDF format
-        let exampleMolecule = `
-        Caffeine
-        RDKit          2D
-
-        6  6  0  0  0  0  0  0  0  0  0  0
-          0.7143    0.0000    0.0000 C   0  0
-          1.4286    1.2321    0.0000 N   0  0
-          2.8571    1.2321    0.0000 C   0  0
-          3.5714    2.4642    0.0000 O   0  0
-        `;
-
-        // Render the example molecule
-        renderMolecule(exampleMolecule, 'sdf');
+        // Basic test setup to see if the 3Dmol.js viewer is working
+        let element = document.getElementById('mol3d');
+        let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
+        viewer.addModel('O', 'xyz');  // Add a simple oxygen atom in XYZ format
+        viewer.setStyle({}, {sphere: {}});  // Set sphere style
+        viewer.zoomTo();  // Automatically zoom to fit the atom
+        viewer.render();  // Render the model
     </script>
 </body>
 </html>
