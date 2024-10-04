@@ -1,40 +1,27 @@
-const multiparty = require('multiparty');
-const fs = require('fs');
-
-exports.handler = async (event, context) => {
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            body: 'Method Not Allowed',
-        };
-    }
-
-    // Parse the multipart form data
-    const form = new multiparty.Form();
-    let fileData = '';
-
+exports.handler = async (event) => {
     try {
-        // Promise-based parsing of the form data
-        const data = await new Promise((resolve, reject) => {
-            form.parse(event, (err, fields, files) => {
-                if (err) return reject(err);
-                
-                const file = files.file[0];
-                const filePath = file.path;
+        // Check if the method is POST
+        if (event.httpMethod !== 'POST') {
+            return {
+                statusCode: 405,
+                body: 'Method Not Allowed',
+            };
+        }
 
-                // Read the uploaded file content
-                fs.readFile(filePath, 'utf8', (err, data) => {
-                    if (err) return reject(err);
-                    fileData = data;
-                    resolve({ fileData });
-                });
-            });
-        });
+        // Netlify provides the file content as base64-encoded data in `event.body`
+        const contentType = event.headers['content-type'];
 
-        // Return the file content (PDB or SDF)
+        // Decode the base64 body if it's a file upload
+        const bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
+
+        // Log the content type and file data for debugging
+        console.log('Content Type:', contentType);
+        console.log('Received File Data:', bodyData);
+
+        // Return the file data to the client
         return {
             statusCode: 200,
-            body: data.fileData,
+            body: bodyData,
             headers: {
                 'Content-Type': 'text/plain',
             },
