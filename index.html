@@ -11,57 +11,72 @@
         #mol3d {
             width: 500px;
             height: 500px;
-            border: 2px solid white; /* White border to blend with background */
-            margin: 20px auto; /* Center the container */
+            border: 2px solid white;
+            margin: 20px auto;
             position: relative;
         }
-        h1 {
+        h1, p {
             text-align: center;
             font-family: Arial, sans-serif;
+        }
+        #fileForm {
+            text-align: center;
+            margin: 20px;
         }
     </style>
 </head>
 <body>
     <h1>ChemHermes 3D Molecule Viewer</h1>
+    <p>Upload a PDB or SDF file to view the molecule</p>
+    
+    <!-- File upload form -->
+    <div id="fileForm">
+        <input type="file" id="moleculeFile" accept=".pdb,.sdf">
+        <button id="uploadBtn">Upload and Render</button>
+    </div>
+
+    <!-- Molecule viewer container -->
     <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
     
     <script>
-        let element = document.getElementById('mol3d');
-        console.log('Viewer element:', element);
+        const uploadButton = document.getElementById('uploadBtn');
+        const moleculeFileInput = document.getElementById('moleculeFile');
+        const viewerElement = document.getElementById('mol3d');
 
-        // Create the viewer and explicitly set the dimensions to match the container
-        let viewer = $3Dmol.createViewer(element, {
-            backgroundColor: 'white', 
-            width: '100%',  // Set to 100% to fit the container
-            height: '100%'  // Set to 100% to fit the container
+        let viewer = $3Dmol.createViewer(viewerElement, {
+            backgroundColor: 'white',
+            width: '100%',
+            height: '100%',
         });
-        console.log('Viewer created:', viewer);
 
-        // Force the viewer to resize to match the container size
-        viewer.resize();
+        // Handle file upload and rendering
+        uploadButton.addEventListener('click', () => {
+            const file = moleculeFileInput.files[0];
+            if (!file) {
+                alert('Please select a molecule file.');
+                return;
+            }
 
-        // Fetch the locally hosted PDB file using the native JavaScript fetch API
-        const pdbUrl = "./models/1a6m.pdb";
+            const formData = new FormData();
+            formData.append('file', file);
 
-        fetch(pdbUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();  // Get the file content as text
+            // Send file to Netlify function
+            fetch('/.netlify/functions/uploadMolecule', {
+                method: 'POST',
+                body: formData,
             })
-            .then(pdbData => {
-                console.log('Local PDB model fetched');
-                viewer.addModel(pdbData, "pdb");  // Add the model
-                viewer.setStyle({}, {cartoon: {color: 'spectrum'}});  // Apply style
-                viewer.zoomTo();  // Automatically zoom to fit the molecule
-                viewer.render();  // Render the model
-                console.log('Rendering complete');
+            .then(response => response.text())
+            .then(moleculeData => {
+                // Render the molecule in the viewer
+                viewer.addModel(moleculeData, file.name.endsWith('.pdb') ? 'pdb' : 'sdf');
+                viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                viewer.zoomTo();
+                viewer.render();
             })
-            .catch(error => {
-                console.error('Failed to load the local PDB file:', error);
-            });
+            .catch(error => console.error('Error uploading file:', error));
+        });
     </script>
 </body>
 </html>
+
 
