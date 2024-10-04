@@ -13,6 +13,7 @@
             height: 500px;
             border: 2px solid black;
             margin: 20px auto; /* Center the container */
+            box-sizing: border-box; /* Ensure borders are included in the size */
             position: relative;
         }
         h1 {
@@ -32,8 +33,8 @@
         // Create the viewer and explicitly set the dimensions to match the container
         let viewer = $3Dmol.createViewer(element, {
             backgroundColor: 'white', 
-            width: '500px',  // Explicitly set width to match container
-            height: '500px'  // Explicitly set height to match container
+            width: '100%',  // Set to 100% to fit the container
+            height: '100%'  // Set to 100% to fit the container
         });
         console.log('Viewer created:', viewer);
 
@@ -41,7 +42,7 @@
         viewer.resize();
 
         // Fetch the locally hosted PDB file using the native JavaScript fetch API
-        const pdbUrl = "./models/1a6m.pdb";
+        const pdbUrl = "./models/1A2C.pdb";
 
         fetch(pdbUrl)
             .then(response => {
@@ -64,5 +65,6 @@
     </script>
 </body>
 </html>
+
 
 
