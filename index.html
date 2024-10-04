@@ -29,14 +29,19 @@
         let element = document.getElementById('mol3d');
         console.log('Viewer element:', element);
 
-        let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
+        // Create the viewer and explicitly set the dimensions to match the container
+        let viewer = $3Dmol.createViewer(element, {
+            backgroundColor: 'white', 
+            width: '500px',  // Explicitly set width to match container
+            height: '500px'  // Explicitly set height to match container
+        });
         console.log('Viewer created:', viewer);
 
         // Force the viewer to resize to match the container size
         viewer.resize();
 
         // Load the locally hosted PDB file
-        const pdbUrl = "./models/1a6m.pdb";
+        const pdbUrl = "./models/1A2C.pdb";
         
         $.get(pdbUrl, function(pdbData) {
             console.log('Local PDB model fetched');
@@ -48,7 +53,6 @@
         }).fail(function() {
             console.error('Failed to load the local PDB file.');
         });
-
     </script>
 </body>
 </html>
