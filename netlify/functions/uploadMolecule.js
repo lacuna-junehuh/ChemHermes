@@ -8,38 +8,15 @@ exports.handler = async (event) => {
             };
         }
 
+        // Netlify provides the file content as base64-encoded data in `event.body`
         const contentType = event.headers['content-type'];
 
-        if (!contentType) {
-            console.error('No Content-Type header found');
-            return {
-                statusCode: 400,
-                body: 'Bad Request: No Content-Type header found',
-            };
-        }
-
-        // If the content type is JSON, assume it's coming from GPT Action
-        let bodyData;
-        if (contentType === 'application/json') {
-            const parsedBody = JSON.parse(event.body);
-            bodyData = parsedBody.file;  // Assuming the file data is inside the JSON payload
-            console.log('Received JSON File Data');
-        } else {
-            // Decode the base64 body for other content types (e.g., multipart/form-data)
-            bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
-        }
-
-        if (!bodyData) {
-            console.error('Failed to decode the file data');
-            return {
-                statusCode: 400,
-                body: 'Bad Request: Failed to decode the file data',
-            };
-        }
+        // Decode the base64 body if it's a file upload
+        const bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
 
         // Log the content type and file data for debugging
         console.log('Content Type:', contentType);
-        console.log('Received File Data Length:', bodyData.length);
+        console.log('Received File Data:', bodyData);
 
         // Return the file data to the client
         return {
