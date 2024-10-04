@@ -13,23 +13,22 @@ exports.handler = async (event) => {
 
         let bodyData;
 
-        // Handle case where GPT sends file data as JSON
+        // Handle case where GPT sends file data as JSON (with file_content field)
         if (contentType === 'application/json') {
-            // Log the full JSON body to debug the structure
             console.log('Received JSON Body:', event.body);
 
             const parsedBody = JSON.parse(event.body);
 
-            // Check if the 'file' field exists before accessing it
-            if (!parsedBody.file) {
-                console.error('No file field in the JSON body');
+            // Check if the 'file_content' field exists before accessing it
+            if (!parsedBody.file_content) {
+                console.error('No file_content field in the JSON body');
                 return {
                     statusCode: 400,
-                    body: 'Bad Request: No file field in JSON body',
+                    body: 'Bad Request: No file_content field in JSON body',
                 };
             }
 
-            bodyData = parsedBody.file;
+            bodyData = parsedBody.file_content;
             console.log('Received JSON File Data Length:', bodyData.length);
         } else if (event.isBase64Encoded) {
             // Handle base64-encoded file content
@@ -45,7 +44,7 @@ exports.handler = async (event) => {
             console.error('No valid file data received');
             return {
                 statusCode: 400,
-                body: 'Bad Request: No valid file data received',
+                body: 'Bad Request: No valid file data received. Ensure the PDB content is correctly uploaded.',
             };
         }
 
