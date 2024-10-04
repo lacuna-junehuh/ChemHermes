@@ -45,6 +45,20 @@
             height: '100%',
         });
 
+        // Function to determine if the molecule is small
+        function isSmallMolecule(pdbData) {
+            // Count the number of ATOM records
+            const atomCount = (pdbData.match(/^ATOM\s/gm) || []).length;
+
+            // Check for HELIX or SHEET records (indicates large molecule)
+            const hasHelix = pdbData.includes('HELIX');
+            const hasSheet = pdbData.includes('SHEET');
+
+            // Consider the molecule small if it has few atoms and no secondary structure
+            return atomCount < 50 && !hasHelix && !hasSheet;
+        }
+
+        // Handle file upload and rendering
         uploadButton.addEventListener('click', () => {
             const file = moleculeFileInput.files[0];
             if (!file) {
@@ -56,6 +70,7 @@
             reader.onload = function(event) {
                 const fileContent = event.target.result;
 
+                // Send the file content to the Netlify function
                 fetch('/.netlify/functions/uploadMolecule', {
                     method: 'POST',
                     headers: {
@@ -75,15 +90,22 @@
                     const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
 
                     try {
+                        // Clear all previous models from the viewer
+                        viewer.removeAllModels();
+
+                        // Add the new model to the viewer
                         viewer.addModel(moleculeData, format);
 
-                        // Use stick representation for small molecules
-                        viewer.setStyle({}, {stick: {colorscheme: 'Jmol'}});
+                        // Determine whether to use stick or cartoon style based on the molecule size
+                        if (isSmallMolecule(moleculeData)) {
+                            // Use stick style for small molecules
+                            viewer.setStyle({}, {stick: {colorscheme: 'Jmol', radius: 0.2}});
+                        } else {
+                            // Use cartoon style for large molecules (proteins)
+                            viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                        }
 
-                        // Alternatively, you can use sphere or line style
-                        // viewer.setStyle({}, {sphere: {scale: 0.3}}); // Sphere style for atoms
-                        // viewer.setStyle({}, {line: {colorscheme: 'Jmol'}}); // Line style
-
+                        // Render the updated molecule view
                         viewer.zoomTo();
                         viewer.render();
                         console.log('Molecule rendered successfully');
@@ -94,9 +116,9 @@
                 .catch(error => console.error('Error uploading file:', error));
             };
 
+            // Read the file as plain text
             reader.readAsText(file);
         });
     </script>
 </body>
 </html>
-
