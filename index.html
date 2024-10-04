@@ -68,16 +68,30 @@
                 })
                 .then(response => response.text())
                 .then(moleculeData => {
-                    // Render the molecule in the viewer
-                    console.log('File data received:', moleculeData);
+                    console.log('File data received:', moleculeData);  // Log received data
+
+                    // Debug: Check if molecule data length is correct
+                    if (!moleculeData || moleculeData.length === 0) {
+                        console.error('Empty molecule data received');
+                        return;
+                    }
 
                     const format = file.name.endsWith('.pdb') ? 'pdb' : 'sdf';
-                    viewer.addModel(moleculeData, format);
-                    viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
-                    viewer.zoomTo();
-                    viewer.render();
+                    
+                    try {
+                        // Render the molecule in the viewer
+                        viewer.addModel(moleculeData, format);
+                        viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+                        viewer.zoomTo();
+                        viewer.render();
+                        console.log('Molecule rendered successfully');
+                    } catch (err) {
+                        console.error('Error rendering molecule:', err);  // Log rendering errors
+                    }
                 })
-                .catch(error => console.error('Error uploading file:', error));
+                .catch(error => {
+                    console.error('Error uploading file:', error);  // Log upload errors
+                });
             };
 
             // Read the file as plain text (PDB or SDF)
