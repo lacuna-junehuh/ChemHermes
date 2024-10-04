@@ -8,20 +8,32 @@ exports.handler = async (event) => {
             };
         }
 
-        // Netlify provides the file content as base64-encoded data in `event.body`
         const contentType = event.headers['content-type'];
+        console.log('Content Type:', contentType);  // Log content type for debugging
 
-        // Decode the base64 body if it's a file upload
-        const bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
+        // Handle base64-encoded content
+        let bodyData;
+        if (event.isBase64Encoded) {
+            console.log('Decoding base64-encoded data...');
+            bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
+        } else {
+            bodyData = event.body;  // Handle non-base64 content as plain text
+        }
 
-        // Log the content type and file data for debugging
-        console.log('Content Type:', contentType);
-        console.log('Received File Data:', bodyData);
+        if (!bodyData || bodyData.length === 0) {
+            console.error('No file data received or empty data');
+            return {
+                statusCode: 400,
+                body: 'Bad Request: No file data received or file data is empty',
+            };
+        }
 
-        // Return the file data to the client
+        console.log('Received File Data Length:', bodyData.length);
+
+        // Return the decoded file data to the client
         return {
             statusCode: 200,
-            body: bodyData,
+            body: bodyData,  // Return file content back to the client
             headers: {
                 'Content-Type': 'text/plain',
             },
