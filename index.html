@@ -25,13 +25,16 @@
     <div id="mol3d"></div> <!-- This is where the molecule will be displayed -->
     
     <script>
-        // Basic test setup to see if the 3Dmol.js viewer is working
         let element = document.getElementById('mol3d');
         let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
-        viewer.addModel('O', 'xyz');  // Add a simple oxygen atom in XYZ format
-        viewer.setStyle({}, {sphere: {}});  // Set sphere style
-        viewer.zoomTo();  // Automatically zoom to fit the atom
-        viewer.render();  // Render the model
+
+        // Load a pre-built PDB protein model example from the 3Dmol.org servers
+        viewer.addModelFromUrl("https://3dmol.org/pdb/1A2C.pdb", "pdb", function() {
+            viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
+            viewer.zoomTo();  // Automatically zoom to fit the molecule
+            viewer.render();  // Render the model
+        });
     </script>
 </body>
 </html>
+
