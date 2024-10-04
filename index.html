@@ -26,19 +26,20 @@
     
     <script>
         let element = document.getElementById('mol3d');
-        console.log('Viewer element:', element);
-
+        console.log('Viewer element:', element);  // Debug: Log the viewer element
+        
         let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
-        console.log('Viewer created:', viewer);
+        console.log('Viewer created:', viewer);  // Debug: Log the viewer object
 
-        // Load the local PDB file from the GitHub repository
-        viewer.addModelFromUrl("./models/1a6m.pdb", "pdb", function() {
-            console.log('Local PDB model loaded');
+        // Load a pre-built PDB protein model example from the 3Dmol.org servers
+        viewer.addModelFromUrl("https://3dmol.org/pdb/1A2C.pdb", "pdb", function() {
+            console.log('PDB model loaded');  // Debug: Log when the model is loaded
             viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
             viewer.zoomTo();  // Automatically zoom to fit the molecule
             viewer.render();  // Render the model
-            console.log('Rendering complete');
+            console.log('Rendering complete');  // Debug: Log when rendering is done
         });
     </script>
 </body>
 </html>
+
