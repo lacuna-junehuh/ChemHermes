@@ -1,0 +1,5 @@
+[build]
+  functions = "netlify/functions"  # Tell Netlify where to find the functions
+
+[functions]
+  node_bundler = "esbuild"  # Optional, but improves performance by using the esbuild bundler
