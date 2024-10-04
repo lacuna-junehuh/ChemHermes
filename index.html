@@ -6,6 +6,7 @@
     <title>ChemHermes 3D Molecule Viewer</title>
     <!-- Include 3Dmol.js library from the hosted CDN -->
     <script src="https://3dmol.org/build/3Dmol-min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery for $.get -->
     <style>
         /* Basic styling for the viewer container */
         #mol3d {
@@ -26,20 +27,20 @@
     
     <script>
         let element = document.getElementById('mol3d');
-        console.log('Viewer element:', element);  // Debug: Log the viewer element
-        
-        let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
-        console.log('Viewer created:', viewer);  // Debug: Log the viewer object
+        console.log('Viewer element:', element);
 
-        // Load a pre-built PDB protein model example from the 3Dmol.org servers
-        viewer.addModelFromUrl("https://3dmol.org/pdb/1A2C.pdb", "pdb", function() {
-            console.log('PDB model loaded');  // Debug: Log when the model is loaded
+        let viewer = $3Dmol.createViewer(element, { backgroundColor: 'white' });
+        console.log('Viewer created:', viewer);
+
+        // Manually fetch the PDB file using $.get
+        $.get("https://3dmol.org/pdb/1A2C.pdb", function(pdbData) {
+            console.log('PDB model fetched');
+            viewer.addModel(pdbData, "pdb");  // Add the model
             viewer.setStyle({}, {cartoon: {color: 'spectrum'}});
             viewer.zoomTo();  // Automatically zoom to fit the molecule
             viewer.render();  // Render the model
-            console.log('Rendering complete');  // Debug: Log when rendering is done
+            console.log('Rendering complete');
         });
     </script>
 </body>
 </html>
-
