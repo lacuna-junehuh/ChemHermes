@@ -9,31 +9,38 @@ exports.handler = async (event) => {
         }
 
         const contentType = event.headers['content-type'];
-        console.log('Content Type:', contentType);  // Log content type for debugging
+        console.log('Content Type:', contentType);
 
-        // Handle base64-encoded content
         let bodyData;
-        if (event.isBase64Encoded) {
-            console.log('Decoding base64-encoded data...');
+
+        // Handle JSON input if sent from GPT Action
+        if (contentType === 'application/json') {
+            const parsedBody = JSON.parse(event.body);
+            bodyData = parsedBody.file;  // Assume the file content is inside the 'file' field in JSON
+            console.log('Received JSON File Data Length:', bodyData.length);
+        } else if (event.isBase64Encoded) {
+            // Decode base64-encoded content if sent as plain text
+            console.log('Decoding base64-encoded file data...');
             bodyData = Buffer.from(event.body, 'base64').toString('utf-8');
         } else {
-            bodyData = event.body;  // Handle non-base64 content as plain text
+            bodyData = event.body;  // Handle raw plain text content
         }
 
         if (!bodyData || bodyData.length === 0) {
-            console.error('No file data received or empty data');
+            console.error('Failed to receive or decode file data');
             return {
                 statusCode: 400,
-                body: 'Bad Request: No file data received or file data is empty',
+                body: 'Bad Request: No file data received',
             };
         }
 
+        // Log file data for debugging
         console.log('Received File Data Length:', bodyData.length);
 
         // Return the decoded file data to the client
         return {
             statusCode: 200,
-            body: bodyData,  // Return file content back to the client
+            body: bodyData,  // Send back the molecule data
             headers: {
                 'Content-Type': 'text/plain',
             },
